@@ -59,6 +59,9 @@ int async_task_init_sockets(void)
 		LM_ERR("opening tasks dgram socket pair\n");
 		return -1;
 	}
+
+	fcntl(_async_task_sockets[1], F_SETFL, fcntl(_async_task_sockets[1], F_GETFL, 0) | O_NONBLOCK);
+
 	LM_DBG("inter-process event notification sockets initialized\n");
 	return 0;
 }
