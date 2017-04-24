@@ -47,6 +47,7 @@
 static int _async_task_workers = 0;
 static int _async_task_sockets[2];
 static int _async_task_usleep = 0;
+static int _async_nonblock = 0;
 
 int async_task_run(int idx);
 
@@ -60,7 +61,8 @@ int async_task_init_sockets(void)
 		return -1;
 	}
 
-	fcntl(_async_task_sockets[1], F_SETFL, fcntl(_async_task_sockets[1], F_GETFL, 0) | O_NONBLOCK);
+	if (_async_nonblock)
+		fcntl(_async_task_sockets[1], F_SETFL, fcntl(_async_task_sockets[1], F_GETFL, 0) | O_NONBLOCK);
 
 	LM_DBG("inter-process event notification sockets initialized\n");
 	return 0;
@@ -174,6 +176,17 @@ int async_task_set_workers(int n)
 		return 0;
 
 	_async_task_workers = n;
+
+	return 0;
+}
+
+/**
+ *
+ */
+int async_task_set_nonblock(int n)
+{
+	if(n>0)
+		_async_nonblock = 1;
 
 	return 0;
 }
