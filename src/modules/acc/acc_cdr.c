@@ -282,6 +282,7 @@ static int log_write_cdr( struct dlg_cell* dialog,
 	if((cdr_log_enable==0) && (force==0))
 		return 0;
 
+	LM_WARN( "FORCE: %d", force);
     /* get default values */
     message_index = cdr_core2strar( dialog,
                                     cdr_value_array,
