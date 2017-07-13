@@ -548,6 +548,8 @@ static int mod_init( void )
 			return -1;
 		}
 	
+		LM_WARN( "cdr facility set to '%s'\n", cdr_facility_str);
+
 		if( init_cdr_generation() != 0)
 		{
 			LM_ERR("failed to init cdr generation\n");

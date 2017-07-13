@@ -279,10 +279,9 @@ static int log_write_cdr( struct dlg_cell* dialog,
 	int extra_index = 0;
     int counter = 0;
 
-	if((cdr_log_enable==0) && (force==0))
-		return 0;
+    if((cdr_log_enable==0) && (force==0))
+        return 0;
 
-	LM_WARN( "FORCE: %d", force);
     /* get default values */
     message_index = cdr_core2strar( dialog,
                                     cdr_value_array,
@@ -351,6 +350,7 @@ static int log_write_cdr( struct dlg_cell* dialog,
     *(message_position++) = '\n';
     *(message_position++) = '\0';
 
+    LM_ERR( "CDR FACILITY: %d", cdr_facility);
     LM_GEN2( cdr_facility, log_level, "%s", cdr_message);
 
 	/* free memory allocated by extra2strar, nothing is done in case no extra strings were found by extra2strar */
@@ -904,6 +904,7 @@ int set_cdr_facility( char* cdr_facility_str)
         return -1;
     }
 
+    LM_ERR("cdr facility configured: %s\n", facility_id);
     cdr_facility = facility_id;
 
     return 0;
