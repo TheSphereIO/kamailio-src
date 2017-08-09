@@ -119,6 +119,7 @@ struct acc_extra *log_extra = 0; /*!< Log extra attributes */
 
 int cdr_enable  = 0;
 int cdr_log_enable  = 1;
+int cdr_log_fallback  = 0;
 int cdr_start_on_confirmed = 0;
 int cdr_expired_dlg_enable = 0;
 static char* cdr_facility_str = 0;
@@ -233,6 +234,7 @@ static param_export_t params[] = {
 	{"cdr_end_id",		 PARAM_STR, &cdr_end_str		},
 	{"cdr_duration_id",	 PARAM_STR, &cdr_duration_str	},
 	{"cdr_expired_dlg_enable", INT_PARAM, &cdr_expired_dlg_enable   },
+	{"cdr_log_fallback",     INT_PARAM, &cdr_log_fallback	},
 	/* DIAMETER specific */
 #ifdef DIAM_ACC
 	{"diameter_flag",        INT_PARAM, &diameter_flag        },

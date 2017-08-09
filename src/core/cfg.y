@@ -375,6 +375,7 @@ extern char *default_routename;
 %token SOCKET_WORKERS
 %token ASYNC_WORKERS
 %token ASYNC_USLEEP
+%token ASYNC_NONBLOCK
 %token CHECK_VIA
 %token PHONE2TEL
 %token MEMLOG
@@ -891,7 +892,9 @@ assign_stm:
 	| ASYNC_WORKERS EQUAL NUMBER { async_task_set_workers($3); }
 	| ASYNC_WORKERS EQUAL error { yyerror("number expected"); }
 	| ASYNC_USLEEP EQUAL NUMBER { async_task_set_usleep($3); }
-	| ASYNC_USLEEP EQUAL error { yyerror("number expected"); }
+	| ASYNC_USLEEP EQUAL error { yyerror("boolean value expected"); }
+	| ASYNC_NONBLOCK EQUAL NUMBER { async_task_set_nonblock($3); }
+	| ASYNC_NONBLOCK EQUAL error { yyerror("number expected"); }
 	| CHECK_VIA EQUAL NUMBER { check_via=$3; }
 	| CHECK_VIA EQUAL error { yyerror("boolean value expected"); }
 	| PHONE2TEL EQUAL NUMBER { phone2tel=$3; }
