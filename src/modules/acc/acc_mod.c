@@ -622,7 +622,8 @@ static int mod_init( void )
 
 static int child_init(int rank)
 {
-	if (rank==PROC_INIT || rank==PROC_MAIN || rank==PROC_TCP_MAIN)
+	if((acc_db_insert_mode==2 && rank!=PROC_RPC) ||
+			(rank==PROC_INIT || rank==PROC_MAIN || rank==PROC_TCP_MAIN))
 		return 0; /* do nothing for the main process */
 
 #ifdef SQL_ACC
