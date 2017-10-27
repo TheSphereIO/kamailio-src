@@ -202,34 +202,37 @@ void db_unixodbc_async_exec_task(void *param)
  */
 int db_unixodbc_submit_query_async(const db1_con_t* _h, const str* _s)
 {
-    struct db_id* di;
-    async_task_t *atask;
-    int asize;
-    str *p;
+	struct db_id* di;
+	async_task_t *atask;
+	int asize;
+	str *p;
+	
+	di = ((struct pool_con*)_h->tail)->id;
+	
+	asize = sizeof(async_task_t) + 2*sizeof(str) + di->url.len + _s->len + 2;
+	atask = shm_malloc(asize);
+	if(atask==NULL) {
+	    LM_ERR("no more shared memory to allocate %d\n", asize);
+	    return -1;
+	}
+	
+	atask->exec = db_unixodbc_async_exec_task;
+	atask->param = (char*)atask + sizeof(async_task_t);
+	
+	p = (str*)((char*)atask + sizeof(async_task_t));
+	p[0].s = (char*)p + 2*sizeof(str);
+	p[0].len = di->url.len;
+	strncpy(p[0].s, di->url.s, di->url.len);
+	p[1].s = p[0].s + p[0].len + 1;
+	p[1].len = _s->len;
+	strncpy(p[1].s, _s->s, _s->len);
+	
+	if (async_task_push(atask)<0) {
+		shm_free(atask);
+		return -1;
+	}
 
-    di = ((struct pool_con*)_h->tail)->id;
-
-    asize = sizeof(async_task_t) + 2*sizeof(str) + di->url.len + _s->len + 2;
-    atask = shm_malloc(asize);
-    if(atask==NULL) {
-        LM_ERR("no more shared memory to allocate %d\n", asize);
-        return -1;
-    }
-
-    atask->exec = db_unixodbc_async_exec_task;
-    atask->param = (char*)atask + sizeof(async_task_t);
-
-    p = (str*)((char*)atask + sizeof(async_task_t));
-    p[0].s = (char*)p + 2*sizeof(str);
-    p[0].len = di->url.len;
-    strncpy(p[0].s, di->url.s, di->url.len);
-    p[1].s = p[0].s + p[0].len + 1;
-    p[1].len = _s->len;
-    strncpy(p[1].s, _s->s, _s->len);
-
-    async_task_push(atask);
-
-    return 0;
+	return 0;
 }
 extern char *db_unixodbc_tquote;
 
