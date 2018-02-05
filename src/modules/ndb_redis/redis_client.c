@@ -52,6 +52,7 @@ extern int redis_cluster_param;
 extern int redis_disable_time_param;
 extern int redis_allowed_timeouts_param;
 extern int redis_flush_on_reconnect_param;
+extern int redis_allow_dynamic_nodes_param;
 
 /* backwards compatibility with hiredis < 0.12 */
 #if (HIREDIS_MAJOR == 0) && (HIREDIS_MINOR < 12)
@@ -683,6 +684,29 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
 				LM_DBG("Reusing Connection\n");
 				*rsrv = rsrv_new;
 				return 1;
+			}
+			// New param redis_allow_dynamic_nodes_param: if set,  we allow ndb_redis to add nodes that were
+			// not defined explicitly in the configuration
+			else if (redis_allow_dynamic_nodes_param) {
+				// Server correctly added if redisc_add_server returns 0
+				// TODO: Probably this doesn't take as input a "name", but a configuration string.
+				// The only way this can work is if the new node is accessible with default parameters for sock and db
+				if (redisc_add_server(&name) == 0) {
+					rsrv_new = redisc_get_server(&name);
+					if (rsrv_new) {
+						*rsrv = rsrv_new;
+						return 1;
+					}
+					else {
+						// Inserting the new node failed somehow
+						// We have no node to redirect to
+						LM_ERR("No new Connection with name (%.*s) was created\n", name.len, name.s);
+					}
+				}
+				else {
+					LM_ERR("Couldn't add a server dynamically. Oh no...\n");
+				}
+			}
 			} else {
 				LM_ERR("No Connection with name (%.*s)\n", name.len, name.s);
 			}
