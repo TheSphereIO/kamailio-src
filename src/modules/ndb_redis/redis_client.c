@@ -690,8 +690,22 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
 			else if (redis_allow_dynamic_nodes_param) {
 				// Server correctly added if redisc_add_server returns 0
 				// TODO: Probably this doesn't take as input a "name", but a configuration string.
+				// It requires a char* with the string that defines the server (in this case we'll pass IP:port only)
+				// name=127.0.0.1:6379;addr=127.0.0.1;port=6379;db=0
 				// The only way this can work is if the new node is accessible with default parameters for sock and db
-				if (redisc_add_server(&name) == 0) {
+				// name == 127.0.0.1:6379
+				// spec_new = 'name=' + name + ';addr=' + addr + ';port=' + port
+				// spec_new = 'name=' + name + ';addr=' + addr + ';port=6379'
+				int spec_new_len = 5 + name.len + 6 + addr.len + 10
+				char spec_new[spec_new_len + 1];
+				memset(spec_new, 0, sizeof(spec_new));
+				sprintf(spec_new, 5, "name=");
+				sprintf(spec_new + 5, name.len, name.s);
+				sprtinf(spec_new + 5 + name.len, 6, ";addr=");
+				sprintf(spec_new + 5 + name.len + 6, addr.len, addr.s);
+				sprintf(spec_new + 5 + name.len + 6 + addr.len, 10, ";port=6379");
+				sprintf(spec_new + spec_new_len, 1, '\0');
+				if (redisc_add_server(&spec_new) == 0) {
 					rsrv_new = redisc_get_server(&name);
 					if (rsrv_new) {
 						*rsrv = rsrv_new;
@@ -706,7 +720,6 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
 				else {
 					LM_ERR("Couldn't add a server dynamically. Oh no...\n");
 				}
-			}
 			} else {
 				LM_ERR("No Connection with name (%.*s)\n", name.len, name.s);
 			}
