@@ -696,16 +696,16 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
 				// name == 127.0.0.1:6379
 				// spec_new = 'name=' + name + ';addr=' + addr + ';port=' + port
 				// spec_new = 'name=' + name + ';addr=' + addr + ';port=6379'
-				int spec_new_len = 5 + name.len + 6 + addr.len + 10
+				int spec_new_len = 5 + name.len + 6 + addr.len + 10;
 				char spec_new[spec_new_len + 1];
 				memset(spec_new, 0, sizeof(spec_new));
-				sprintf(spec_new, 5, "name=");
-				sprintf(spec_new + 5, name.len, name.s);
-				sprtinf(spec_new + 5 + name.len, 6, ";addr=");
-				sprintf(spec_new + 5 + name.len + 6, addr.len, addr.s);
-				sprintf(spec_new + 5 + name.len + 6 + addr.len, 10, ";port=6379");
-				sprintf(spec_new + spec_new_len, 1, '\0');
-				if (redisc_add_server(&spec_new) == 0) {
+				snprintf(spec_new, 5, "name=");
+				snprintf(spec_new + 5, name.len, name.s);
+				snprintf(spec_new + 5 + name.len, 6, ";addr=");
+				snprintf(spec_new + 5 + name.len + 6, addr.len, addr.s);
+				snprintf(spec_new + 5 + name.len + 6 + addr.len, 10, ";port=6379");
+				spec_new[spec_new_len] = '\0';
+				if (redisc_add_server(spec_new) == 0) {
 					rsrv_new = redisc_get_server(&name);
 					if (rsrv_new) {
 						*rsrv = rsrv_new;
