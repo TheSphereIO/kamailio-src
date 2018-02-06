@@ -705,7 +705,7 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
 				snprintf(spec_new + 5 + name.len + 6, addr.len, addr.s);
 				snprintf(spec_new + 5 + name.len + 6 + addr.len, 10, ";port=6379");
 				spec_new[spec_new_len] = '\0';
-				if (redisc_add_server(spec_new) == 0) {
+				if (redisc_add_server(&spec_new) == 0) {
 					rsrv_new = redisc_get_server(&name);
 					if (rsrv_new) {
 						*rsrv = rsrv_new;
