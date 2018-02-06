@@ -696,15 +696,29 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
 				// name == 127.0.0.1:6379
 				// spec_new = 'name=' + name + ';addr=' + addr + ';port=' + port
 				// spec_new = 'name=' + name + ';addr=' + addr + ';port=6379'
-				int spec_new_len = 5 + name.len + 6 + addr.len + 10;
-				char spec_new[spec_new_len + 1];
+				int spec_new_len = 5 + name.len + 6 + addr.len + 10 + 1;
+				int current_len = 0;
+				char spec_new[spec_new_len];
 				memset(spec_new, 0, sizeof(spec_new));
 				snprintf(spec_new, 5, "name=");
-				snprintf(spec_new + 5, name.len, name.s);
-				snprintf(spec_new + 5 + name.len, 6, ";addr=");
-				snprintf(spec_new + 5 + name.len + 6, addr.len, addr.s);
-				snprintf(spec_new + 5 + name.len + 6 + addr.len, 10, ";port=6379");
-				spec_new[spec_new_len] = '\0';
+current_len = 5;
+LM_ERR("0 %.*s\n", spec_new, current_len);
+				snprintf(spec_new + current_len, name.len, name.s);
+current_len += name.len;
+LM_ERR("1 %.*s\n", spec_new, current_len);
+				snprintf(spec_new + current_len, 6, ";addr=");
+current_len += 6;
+LM_ERR("2 %.*s\n", spec_new, current_len);
+				snprintf(spec_new + current_len, addr.len, addr.s);
+current_len += addr.len;
+LM_ERR("3 %.*s\n", spec_new, current_len);
+				snprintf(spec_new + current_len, 10, ";port=6379");
+current_len += 10;
+LM_ERR("4 %.*s\n", spec_new, current_len);
+				spec_new[spec_new_len - 1] = '\0';
+current_len += 1;
+LM_ERR("5 %.*s\n", spec_new, current_len);
+
 				if (redisc_add_server(&spec_new) == 0) {
 					rsrv_new = redisc_get_server(&name);
 					if (rsrv_new) {
