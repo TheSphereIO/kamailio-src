@@ -688,55 +688,60 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
 			// New param redis_allow_dynamic_nodes_param: if set,  we allow ndb_redis to add nodes that were
 			// not defined explicitly in the configuration
 			else if (redis_allow_dynamic_nodes_param) {
-				// Server correctly added if redisc_add_server returns 0
-				// TODO: Probably this doesn't take as input a "name", but a configuration string.
-				// It requires a char* with the string that defines the server (in this case we'll pass IP:port only)
-				// name=127.0.0.1:6379;addr=127.0.0.1;port=6379;db=0
-				// The only way this can work is if the new node is accessible with default parameters for sock and db
-				// name == 127.0.0.1:6379
-				// spec_new = 'name=' + name + ';addr=' + addr + ';port=' + port
-				// spec_new = 'name=' + name + ';addr=' + addr + ';port=6379'
-				int spec_new_len = 5 + name.len + 6 + addr.len + 10 + 1;
-				int current_len = 0;
-				char spec_new[spec_new_len];
-				memset(spec_new, 0, sizeof(spec_new));
-				snprintf(spec_new, 5, "name=");
-current_len = 5;
-LM_ERR("0 %.*s\n", spec_new, current_len);
-				snprintf(spec_new + current_len, name.len, name.s);
-current_len += name.len;
-LM_ERR("1 %.*s\n", spec_new, current_len);
-				snprintf(spec_new + current_len, 6, ";addr=");
-current_len += 6;
-LM_ERR("2 %.*s\n", spec_new, current_len);
-				snprintf(spec_new + current_len, addr.len, addr.s);
-current_len += addr.len;
-LM_ERR("3 %.*s\n", spec_new, current_len);
-				snprintf(spec_new + current_len, 10, ";port=6379");
-current_len += 10;
-LM_ERR("4 %.*s\n", spec_new, current_len);
-				spec_new[spec_new_len - 1] = '\0';
-current_len += 1;
-LM_ERR("5 %.*s\n", spec_new, current_len);
+                              // Server correctly added if redisc_add_server returns 0
+                                // It requires a char* with the string that defines the server (in this case we'll pass IP:port only)
+                                // name=127.0.0.1:6379;addr=127.0.0.1;port=6379;db=0
+                                // The only way this can work is if the new node is accessible with default parameters for sock and db
+                                // name == 127.0.0.1:6379
+                                // spec_new = 'name=' + name + ';addr=' + addr + ';port=' + port
+                                // spec_new = 'name=' + name + ';addr=' + addr + ';port=6379'
 
-				if (redisc_add_server(&spec_new) == 0) {
-					rsrv_new = redisc_get_server(&name);
-					if (rsrv_new) {
-						*rsrv = rsrv_new;
-						return 1;
-					}
-					else {
-						// Inserting the new node failed somehow
-						// We have no node to redirect to
-						LM_ERR("No new Connection with name (%.*s) was created\n", name.len, name.s);
-					}
-				}
-				else {
-					LM_ERR("Couldn't add a server dynamically. Oh no...\n");
-				}
-			} else {
-				LM_ERR("No Connection with name (%.*s)\n", name.len, name.s);
-			}
+                                LM_ERR("---------------->Generating a new server entry for %.*s\n", name.len, name.s);
+
+                                int current_len = 0;
+                                char spec_new[100];
+                                memset(spec_new, 0, sizeof(spec_new));
+                                current_len = snprintf(spec_new, sizeof(spec_new), "name=%.*s;addr=%.*s;port=%i", name.len, name.s, addr.len, addr.s, port);
+
+                                //LM_ERR("---------------->0 %.*s (%i)\n", current_len, spec_new, current_len);
+
+                                spec_new[current_len] = '\0';
+
+                                LM_ERR("---------------->1 %.*s (%i)\n", current_len, spec_new, current_len);
+
+                                if (redisc_add_server((char*)&spec_new) == 0) {
+
+                                        LM_ERR("2 %.*s (%i)\n", name.len, name.s, name.len);
+
+                                        rsrv_new = redisc_get_server(&name);
+
+                                        LM_ERR("3 %.*s (%i)\n", current_len, spec_new, current_len);
+
+                                        if (rsrv_new) {
+                                                *rsrv = rsrv_new;
+
+                                                if(redisc_reconnect_server(rsrv_new)==0) {
+                                                        LM_ERR("3.1 -----> %p\n", rsrv);
+                                                }
+                                                else {
+                                                        LM_ERR("3.2 -----> ERROR connecting to new server %p\n", rsrv);
+                                                }
+
+                                                LM_ERR("4 -----> %p\n", rsrv);
+                                                return 1;
+                                        }
+                                        else {
+                                                // Inserting the new node failed somehow
+                                                // We have no node to redirect to
+                                                LM_ERR("No new Connection with name (%.*s) was created\n", name.len, name.s);
+                                        }
+                                }
+                                else {
+                                        LM_ERR("Couldn't add a server dynamically. Oh no...\n");
+                                }
+                        } else {
+                                LM_ERR("No Connection with name (%.*s)\n", name.len, name.s);
+                        }
 		}
 	}
 	return 0;
