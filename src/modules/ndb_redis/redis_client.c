@@ -703,13 +703,18 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
                                 memset(spec_new, 0, sizeof(spec_new));
                                 current_len = snprintf(spec_new, sizeof(spec_new), "name=%.*s;addr=%.*s;port=%i", name.len, name.s, addr.len, addr.s, port);
 
-                                //LM_ERR("---------------->0 %.*s (%i)\n", current_len, spec_new, current_len);
+                                char* new_server = (char*)pkg_malloc(current_len + 1);
+                                if (new_server == NULL) {
+                                        LM_ERR("Grossa crisi\n");
+                                        pkg_free(new_server);
+                                        return 0;
+                                }
 
-                                spec_new[current_len] = '\0';
+                                strncpy(new_server, spec_new, current_len);
+                                new_server[current_len] = '\0';
+                                LM_ERR("---------------->1 %.*s (%i)\n", current_len, new_server, current_len);
 
-                                LM_ERR("---------------->1 %.*s (%i)\n", current_len, spec_new, current_len);
-
-                                if (redisc_add_server((char*)&spec_new) == 0) {
+                                if (redisc_add_server(new_server) == 0) {
 
                                         LM_ERR("2 %.*s (%i)\n", name.len, name.s, name.len);
 
