@@ -696,7 +696,7 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
 
                                 char* new_server = (char*)pkg_malloc(current_len + 1);
                                 if (new_server == NULL) {
-                                        LM_ERR("Grossa crisi\n");
+                                        LM_ERR("Error allocating pkg mem\n");
                                         pkg_free(new_server);
                                         return 0;
                                 }
