@@ -652,6 +652,9 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
 	char buffername[100];
 	unsigned int port;
 	str addr = {0, 0}, tmpstr = {0, 0}, name = {0, 0};
+	int server_len = 0;
+	char spec_new[100];
+
 	if (redis_cluster_param) {
 		LM_DBG("Redis replied: \"%.*s\"\n", reply->len, reply->str);
 		if ((reply->len > 7) && (strncmp(reply->str, "MOVED", 5) == 0)) {
@@ -689,22 +692,22 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
 			// not defined explicitly in the module configuration
 			else if (redis_allow_dynamic_nodes_param) {
                                 // The only way this can work is if the new node is accessible with default parameters for sock and db
-                                int current_len = 0;
-                                char spec_new[100];
                                 memset(spec_new, 0, sizeof(spec_new));
-                                current_len = snprintf(spec_new, sizeof(spec_new), "name=%.*s;addr=%.*s;port=%i", name.len, name.s, addr.len, addr.s, port);
+                                server_len = snprintf(spec_new, sizeof(spec_new) - 1, "name=%.*s;addr=%.*s;port=%i", name.len, name.s, addr.len, addr.s, port);
 
-                                char* new_server = (char*)pkg_malloc(current_len + 1);
-                                if (new_server == NULL) {
+                                LM_ERR("---------------> GV spec_new: %s, server_len: %i \n", spec_new, server_len);
+
+                                char* server_new = (char*)pkg_malloc(server_len);
+                                if (server_new == NULL) {
                                         LM_ERR("Error allocating pkg mem\n");
-                                        pkg_free(new_server);
+                                        pkg_free(server_new);
                                         return 0;
                                 }
 
-                                strncpy(new_server, spec_new, current_len);
-                                new_server[current_len] = '\0';
+                                strncpy(server_new, spec_new, server_len);
+                                //// server_new[server_len] = '\0';
 
-                                if (redisc_add_server(new_server) == 0) {
+                                if (redisc_add_server(server_new) == 0) {
                                         rsrv_new = redisc_get_server(&name);
 
                                         if (rsrv_new) {
