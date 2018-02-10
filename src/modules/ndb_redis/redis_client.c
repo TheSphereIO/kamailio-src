@@ -697,7 +697,7 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
 
                                 LM_ERR("---------------> GV spec_new: %s, server_len: %i \n", spec_new, server_len);
 
-                                char* server_new = (char*)pkg_malloc(server_len);
+                                char* server_new = (char*)pkg_malloc(server_len + 1);
                                 if (server_new == NULL) {
                                         LM_ERR("Error allocating pkg mem\n");
                                         pkg_free(server_new);
@@ -705,7 +705,8 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
                                 }
 
                                 strncpy(server_new, spec_new, server_len);
-                                //// server_new[server_len] = '\0';
+                                server_new[server_len] = '\0';
+                                LM_ERR("---------------> GV server_new: %s, server_len: %i \n", server_new, server_len);
 
                                 if (redisc_add_server(server_new) == 0) {
                                         rsrv_new = redisc_get_server(&name);
