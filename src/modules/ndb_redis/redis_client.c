@@ -688,10 +688,13 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
 				*rsrv = rsrv_new;
 				return 1;
 			}
-			// New param redis_allow_dynamic_nodes_param: if set, we allow ndb_redis to add nodes that were
-			// not defined explicitly in the module configuration
+			/* New param redis_allow_dynamic_nodes_param:
+			if set, we allow ndb_redis to add nodes that were
+			not defined explicitly in the module configuration */
 			else if (redis_allow_dynamic_nodes_param) {
-                                // The only way this can work is if the new node is accessible with default parameters for sock and db
+                                /* For now the only way this can work is if
+				the new node is accessible with default
+				parameters for sock and db */
                                 memset(spec_new, 0, sizeof(spec_new));
                                 server_len = snprintf(spec_new, sizeof(spec_new) - 1, "name=%.*s;addr=%.*s;port=%i", name.len, name.s, addr.len, addr.s, port);
 
@@ -721,8 +724,8 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
                                                 }
                                         }
                                         else {
-                                                // Inserting the new node failed somehow
-                                                // We have no node to redirect to
+                                                /* Adding the new node failed
+                                                Cannot perform redirection */
                                                 LM_ERR("No new connection with name (%.*s) was created\n", name.len, name.s);
                                         }
                                 }
