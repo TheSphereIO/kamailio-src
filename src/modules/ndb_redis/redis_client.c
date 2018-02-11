@@ -695,8 +695,6 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
                                 memset(spec_new, 0, sizeof(spec_new));
                                 server_len = snprintf(spec_new, sizeof(spec_new) - 1, "name=%.*s;addr=%.*s;port=%i", name.len, name.s, addr.len, addr.s, port);
 
-                                LM_ERR("---------------> GV spec_new: %s, server_len: %i \n", spec_new, server_len);
-
                                 char* server_new = (char*)pkg_malloc(server_len + 1);
                                 if (server_new == NULL) {
                                         LM_ERR("Error allocating pkg mem\n");
@@ -706,7 +704,6 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
 
                                 strncpy(server_new, spec_new, server_len);
                                 server_new[server_len] = '\0';
-                                LM_ERR("---------------> GV server_new: %s, server_len: %i \n", server_new, server_len);
 
                                 if (redisc_add_server(server_new) == 0) {
                                         rsrv_new = redisc_get_server(&name);
@@ -715,13 +712,13 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
                                                 *rsrv = rsrv_new;
 						// Need to connect to the new server now
                                                 if(redisc_reconnect_server(rsrv_new)==0) {
-                                                        LM_DBG("Connected to the new server (%p)\n", rsrv);
+							LM_DBG("Connected to the new server with name: %.*s\n", name.len, name.s);
+							return 1;
                                                 }
                                                 else {
-                                                        LM_ERR("ERROR connecting to new server (%p)\n", rsrv);
+							LM_ERR("ERROR connecting to the new server with name: %.*s\n", name.len, name.s);
+							return 0;
                                                 }
-
-                                                return 1;
                                         }
                                         else {
                                                 // Inserting the new node failed somehow
@@ -730,7 +727,7 @@ int check_cluster_reply(redisReply *reply, redisc_server_t **rsrv) {
                                         }
                                 }
                                 else {
-                                        LM_ERR("Couldn't add a server dynamically\n");
+                                        LM_ERR("Could not add a new connection with name %.*s\n", name.len, name.s);
                                 }
                         } else {
                                 LM_ERR("No Connection with name (%.*s)\n", name.len, name.s);
