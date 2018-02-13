@@ -87,6 +87,7 @@ extern str cdr_end_str;
 extern str cdr_duration_str;
 extern str acc_cdrs_table;
 extern int cdr_log_enable;
+extern int cdr_log_fallback;
 extern int _acc_cdr_on_failed;
 
 static int string2time( str* time_str, struct timeval* time_value);
@@ -277,7 +278,7 @@ error:
 
 /* collect all crd data and write it to a syslog */
 static int log_write_cdr( struct dlg_cell* dialog,
-		struct sip_msg* message)
+		struct sip_msg* message, int force)
 {
 	static char cdr_message[ MAX_SYSLOG_SIZE];
 	static char* const cdr_message_end = cdr_message +
@@ -288,7 +289,7 @@ static int log_write_cdr( struct dlg_cell* dialog,
 	int extra_index = 0;
 	int counter = 0;
 
-	if(cdr_log_enable==0)
+	if((cdr_log_enable==0) && (force==0))
 		return 0;
 
 	/* get default values */
@@ -372,6 +373,7 @@ static int write_cdr( struct dlg_cell* dialog,
 		struct sip_msg* message)
 {
 	int ret = 0;
+	int force = 0;
 
 	if( !dialog)
 	{
@@ -383,9 +385,10 @@ static int write_cdr( struct dlg_cell* dialog,
 		LM_ERR( "message is empty!");
 		return -1;
 	}
-
-	ret = log_write_cdr(dialog, message);
-	ret |= db_write_cdr(dialog, message);
+	ret = db_write_cdr(dialog, message);
+	if ((ret < 0) && cdr_log_fallback)
+		force = 1;
+	ret |= log_write_cdr(dialog, message, force);
 	return ret;
 }
 
