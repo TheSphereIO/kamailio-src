@@ -131,6 +131,7 @@ int early_dlgs_cnt = 0;
 int detect_spirals = 1;
 int dlg_send_bye = 0;
 int dlg_timeout_noreset = 0;
+int dlg_rr_noskip = 0;
 stat_var *active_dlgs = 0;
 stat_var *processed_dlgs = 0;
 stat_var *expired_dlgs = 0;
@@ -301,6 +302,7 @@ static param_export_t mod_params[]={
 	{ "ka_timer",              INT_PARAM, &dlg_ka_timer             },
 	{ "ka_interval",           INT_PARAM, &dlg_ka_interval          },
 	{ "timeout_noreset",       INT_PARAM, &dlg_timeout_noreset      },
+	{ "rr_noskip",             INT_PARAM, &dlg_rr_noskip            },
 	{ "timer_procs",           PARAM_INT, &dlg_timer_procs          },
 	{ "track_cseq_updates",    PARAM_INT, &_dlg_track_cseq_updates  },
 	{ "lreq_callee_headers",   PARAM_STR, &dlg_lreq_callee_headers  },
@@ -555,6 +557,12 @@ static int mod_init(void)
 	if (dlg_timeout_noreset != 0 && dlg_timeout_noreset != 1) {
 		LM_ERR("invalid value %d for timeout_noreset param!!\n",
 				dlg_timeout_noreset);
+		return -1;
+	}
+
+	if (dlg_rr_noskip != 0 && dlg_rr_noskip != 1) {
+		LM_ERR("invalid value %d for rr_noskip param!!\n",
+				dlg_rr_noskip);
 		return -1;
 	}
 
