@@ -733,14 +733,6 @@ struct rtpp_set *get_rtpp_set(unsigned int set_id)
 	unsigned int my_current_id = 0;
 	int new_list;
 
-#if DEFAULT_RTPP_SET_ID > 0
-	if (set_id < DEFAULT_RTPP_SET_ID )
-	{
-		LM_ERR(" invalid rtpproxy set value [%u]\n", set_id);
-		return NULL;
-	}
-#endif
-
 	my_current_id = set_id;
 	/*search for the current_id*/
 	lock_get(rtpp_set_list->rset_head_lock);
@@ -797,7 +789,7 @@ struct rtpp_set *get_rtpp_set(unsigned int set_id)
 		rtpp_set_list->rset_last = rtpp_list;
 		rtpp_set_count++;
 
-		if(my_current_id == DEFAULT_RTPP_SET_ID){
+		if(my_current_id == setid_default){
 			default_rtpp_set = rtpp_list;
 		}
 	}
@@ -1009,7 +1001,7 @@ static int rtpengine_add_rtpengine_set(char * rtp_proxies, unsigned int weight, 
 		rtp_proxies+=2;
 	}else{
 		rtp_proxies = p;
-		my_current_id = DEFAULT_RTPP_SET_ID;
+		my_current_id = setid_default;
 	}
 
 	for(;*rtp_proxies && isspace(*rtp_proxies);rtp_proxies++);
@@ -1489,10 +1481,6 @@ mod_init(void)
 		}
 	}
 
-	/* any rtpproxy configured? */
-	if (rtpp_set_list)
-		default_rtpp_set = select_rtpp_set(DEFAULT_RTPP_SET_ID);
-
 	if (rtp_inst_pv_param.s) {
 		rtp_inst_pv_param.len = strlen(rtp_inst_pv_param.s);
 		rtp_inst_pvar = pv_cache_get(&rtp_inst_pv_param);
@@ -1883,6 +1871,8 @@ static const char *transports[] = {
 	[0x01]	= "RTP/SAVP",
 	[0x02]	= "RTP/AVPF",
 	[0x03]	= "RTP/SAVPF",
+	[0x04]	= "UDP/TLS/RTP/SAVP",
+	[0x06]	= "UDP/TLS/RTP/SAVPF",
 };
 
 static int parse_flags(struct ng_flags_parse *ng_flags, struct sip_msg *msg, enum rtpe_operation *op,
@@ -1936,28 +1926,28 @@ static int parse_flags(struct ng_flags_parse *ng_flags, struct sip_msg *msg, enu
 		/* check for specially handled items */
 		switch (key.len) {
 			case 3:
-				if (str_eq(&key, "RTP")) {
+				if (str_eq(&key, "RTP") && !val.s) {
 					ng_flags->transport |= 0x100;
 					ng_flags->transport &= ~0x001;
 				}
-				else if (str_eq(&key, "AVP")) {
+				else if (str_eq(&key, "AVP") && !val.s) {
 					ng_flags->transport |= 0x100;
 					ng_flags->transport &= ~0x002;
 				}
 				else if (str_eq(&key, "TOS") && val.s)
 					bencode_dictionary_add_integer(ng_flags->dict, "TOS", atoi(val.s));
-				else if (str_eq(&key, "delete-delay") && val.s)
-					bencode_dictionary_add_integer(ng_flags->dict, "delete delay", atoi(val.s));
 				else
 					goto generic;
 				goto next;
 				break;
 
 			case 4:
-				if (str_eq(&key, "SRTP"))
+				if (str_eq(&key, "SRTP") && !val.s)
 					ng_flags->transport |= 0x101;
-				else if (str_eq(&key, "AVPF"))
+				else if (str_eq(&key, "AVPF") && !val.s)
 					ng_flags->transport |= 0x102;
+				else if (str_eq(&key, "DTLS") && !val.s)
+					ng_flags->transport |= 0x104;
 				else
 					goto generic;
 				goto next;
@@ -1973,7 +1963,7 @@ static int parse_flags(struct ng_flags_parse *ng_flags, struct sip_msg *msg, enu
 				break;
 
 			case 7:
-				if (str_eq(&key, "RTP/AVP"))
+				if (str_eq(&key, "RTP/AVP") && !val.s)
 					ng_flags->transport = 0x100;
 				else if (str_eq(&key, "call-id")) {
 					err = "missing value";
@@ -1989,9 +1979,9 @@ static int parse_flags(struct ng_flags_parse *ng_flags, struct sip_msg *msg, enu
 			case 8:
 				if (str_eq(&key, "internal") || str_eq(&key, "external"))
 					bencode_list_add_str(ng_flags->direction, &key);
-				else if (str_eq(&key, "RTP/AVPF"))
+				else if (str_eq(&key, "RTP/AVPF") && !val.s)
 					ng_flags->transport = 0x102;
-				else if (str_eq(&key, "RTP/SAVP"))
+				else if (str_eq(&key, "RTP/SAVP") && !val.s)
 					ng_flags->transport = 0x101;
 				else if (str_eq(&key, "from-tag")) {
 					err = "missing value";
@@ -2005,7 +1995,7 @@ static int parse_flags(struct ng_flags_parse *ng_flags, struct sip_msg *msg, enu
 				break;
 
 			case 9:
-				if (str_eq(&key, "RTP/SAVPF"))
+				if (str_eq(&key, "RTP/SAVPF") && !val.s)
 					ng_flags->transport = 0x103;
 				else if (str_eq(&key, "direction"))
 					bencode_list_add_str(ng_flags->direction, &val);
@@ -2059,7 +2049,26 @@ static int parse_flags(struct ng_flags_parse *ng_flags, struct sip_msg *msg, enu
 					*op = OP_ANSWER;
 					goto next;
 				}
+				else if (str_eq(&key, "delete-delay") && val.s)
+					bencode_dictionary_add_integer(ng_flags->dict, "delete delay", atoi(val.s));
 				break;
+
+			case 16:
+				if (str_eq(&key, "UDP/TLS/RTP/SAVP") && !val.s)
+					ng_flags->transport = 0x104;
+				else
+					goto generic;
+				goto next;
+				break;
+
+			case 17:
+				if (str_eq(&key, "UDP/TLS/RTP/SAVPF") && !val.s)
+					ng_flags->transport = 0x106;
+				else
+					goto generic;
+				goto next;
+				break;
+
 		}
 
 generic:
@@ -2160,7 +2169,7 @@ static bencode_item_t *rtpp_function_call(bencode_buffer_t *bencbuf, struct sip_
 		bencode_dictionary_add(ng_flags.dict, "replace", ng_flags.replace);
 	if ((ng_flags.transport & 0x100))
 		bencode_dictionary_add_string(ng_flags.dict, "transport-protocol",
-				transports[ng_flags.transport & 0x003]);
+				transports[ng_flags.transport & 0x007]);
 	if (ng_flags.rtcp_mux && ng_flags.rtcp_mux->child)
 		bencode_dictionary_add(ng_flags.dict, "rtcp-mux", ng_flags.rtcp_mux);
 

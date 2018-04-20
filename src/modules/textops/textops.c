@@ -208,7 +208,7 @@ static cmd_export_t cmds[]={
 	{"remove_hf_re",     (cmd_function)remove_hf_re_f,    1,
 		fixup_regexp_null, fixup_free_regexp_null,
 		ANY_ROUTE},
-	{"remove_hf_exp",     (cmd_function)remove_hf_exp_f,  1,
+	{"remove_hf_exp",     (cmd_function)remove_hf_exp_f,  2,
 		fixup_regexp_regexp, fixup_free_regexp_regexp,
 		ANY_ROUTE},
 	{"is_present_hf",    (cmd_function)is_present_hf_f,   1,
@@ -3368,7 +3368,7 @@ static int ki_is_audio_on_hold(sip_msg_t *msg)
 				if(sdp_stream->media.len==AUDIO_STR_LEN &&
 					strncmp(sdp_stream->media.s,AUDIO_STR,AUDIO_STR_LEN)==0 &&
 					sdp_stream->is_on_hold)
-					return 1;
+					return sdp_stream->is_on_hold;
 				sdp_stream_num++;
 			}
 			sdp_session_num++;

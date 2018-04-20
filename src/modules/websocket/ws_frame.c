@@ -470,13 +470,6 @@ static int decode_and_validate_ws_frame(ws_frame_t *frame,
 	} else
 		mask_start = 2;
 
-	/* Decode mask */
-	frame->masking_key[0] = (buf[mask_start + 0] & 0xff);
-	frame->masking_key[1] = (buf[mask_start + 1] & 0xff);
-	frame->masking_key[2] = (buf[mask_start + 2] & 0xff);
-	frame->masking_key[3] = (buf[mask_start + 3] & 0xff);
-
-	/* Decode and unmask payload */
 	if((unsigned long long)len
 			!= (unsigned long long)frame->payload_len + mask_start + 4) {
 		LM_WARN("message not complete frame size %u but received %u\n",
@@ -492,7 +485,15 @@ static int decode_and_validate_ws_frame(ws_frame_t *frame,
 		*err_text = str_status_message_too_big;
 		return -1;
 	}
+	/* Decode mask */
+	frame->masking_key[0] = (buf[mask_start + 0] & 0xff);
+	frame->masking_key[1] = (buf[mask_start + 1] & 0xff);
+	frame->masking_key[2] = (buf[mask_start + 2] & 0xff);
+	frame->masking_key[3] = (buf[mask_start + 3] & 0xff);
+
 	frame->payload_data = &buf[mask_start + 4];
+
+	/* Decode and unmask payload */
 	for(i = 0; i < frame->payload_len; i++) {
 		j = i % 4;
 		frame->payload_data[i] = frame->payload_data[i] ^ frame->masking_key[j];
@@ -678,6 +679,9 @@ int ws_frame_receive(sr_event_param_t *evp)
 
 					return -1;
 				}
+			} else {
+				LM_ERR("Unrecognized WebSocket subprotocol: %u\n", frame.wsc->sub_protocol);
+				return -1;
 			}
 
 		case OPCODE_CLOSE:

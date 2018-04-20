@@ -619,6 +619,9 @@ reload:
 	}
 	exp = (union module_exports_u*)dlsym(handle, "exports");
 	if(exp==NULL) {
+		error =(char*)dlerror();
+		LM_DBG("attempt to lookup exports structure failed - dlerror: %s\n",
+				(error)?error:"none");
 		/* 'exports' structure not found, look up for '_modulename_exports' */
 		mdir = strrchr(mod_path, '/');
 		if (!mdir) {
@@ -630,11 +633,14 @@ reload:
 		if(expref.len>3 && strcmp(expref.s+expref.len-3, ".so")==0)
 			expref.len -= 3;
 		snprintf(exbuf, 62, "_%.*s_exports", expref.len, expref.s);
-		exp = (union module_exports_u*)dlsym(handle, exbuf);
 		LM_DBG("looking up exports with name: %s\n", exbuf);
-		if ( (error =(char*)dlerror())!=0 ){
-			LM_ERR("%s\n", error);
-			goto error1;
+		exp = (union module_exports_u*)dlsym(handle, exbuf);
+		if(exp==NULL) {
+			if ( (error =(char*)dlerror())!=0 ){
+				LM_ERR("failure for exports symbol: %s - dlerror: %s\n",
+						exbuf, error);
+				goto error1;
+			}
 		}
 	}
 	/* hack to allow for kamailio style dlflags inside exports */
