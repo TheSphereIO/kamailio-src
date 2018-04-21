@@ -65,6 +65,7 @@ static int       seq_match_mode;	/*!< dlg_match mode */
 static int       shutdown_done = 0;	/*!< 1 when destroy_dlg_handlers was called */
 extern int       detect_spirals;
 extern int       dlg_timeout_noreset;
+extern int       dlg_rr_noskip;
 extern int       initial_cbs_inscript;
 extern int       dlg_send_bye;
 extern int       dlg_event_rt[DLG_EVENTRT_MAX];
@@ -227,11 +228,15 @@ int populate_leg_info( struct dlg_cell *dlg, struct sip_msg *msg,
 		skip_recs = 0;
 	} else {
 		/* was the 200 OK received or local generated */
-		skip_recs = dlg->from_rr_nb +
-			((t->relayed_reply_branch>=0)?
-				((t->uac[t->relayed_reply_branch].flags&TM_UAC_FLAG_R2)?2:
-				 ((t->uac[t->relayed_reply_branch].flags&TM_UAC_FLAG_RR)?1:0))
-				:0);
+		if (dlg_rr_noskip) {
+			skip_recs = dlg->from_rr_nb;
+		} else {
+			skip_recs = dlg->from_rr_nb +
+				((t->relayed_reply_branch>=0)?
+					((t->uac[t->relayed_reply_branch].flags&TM_UAC_FLAG_R2)?2:
+					 ((t->uac[t->relayed_reply_branch].flags&TM_UAC_FLAG_RR)?1:0))
+					:0);
+		}
 	}
 
 	if(msg->record_route){
