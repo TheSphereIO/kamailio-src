@@ -2356,6 +2356,10 @@ if(has_totag() and is_present_hf("Route") and uri==myself ) {
 			<listitem><para>
 				<emphasis>totag</emphasis> -  to tag of the dialog to terminated
 			</para></listitem>
+			<listitem><para>
+				<emphasis>extra_hdrs</emphasis> - (optional) string containg
+				extra headers (full format) to be added to the BYE requests.
+			</para></listitem>
 		</itemizedlist>
 		<para>
 		The command works only for confirmed dialogs.

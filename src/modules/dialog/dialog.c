@@ -2155,6 +2155,7 @@ static void rpc_dlg_terminate_dlg(rpc_t *rpc,void *c){
 	str callid = {NULL,0};
 	str ftag = {NULL,0};
 	str ttag = {NULL,0};
+	str rpc_extra_hdrs = {NULL,0};
 
 	dlg_cell_t * dlg = NULL;
 	unsigned int dir;
@@ -2167,6 +2168,13 @@ static void rpc_dlg_terminate_dlg(rpc_t *rpc,void *c){
 		rpc->fault(c, 400, "Need a Callid ,from tag ,to tag");
 		return;
 	}
+	
+	if(rpc->scan(c, "*S", &rpc_extra_hdrs)<1)
+	{
+		rpc_extra_hdrs.s = NULL;
+		rpc_extra_hdrs.len = 0;
+	}
+
 
 	dlg=get_dlg(&callid, &ftag, &ttag, &dir);
 
@@ -2179,7 +2187,7 @@ static void rpc_dlg_terminate_dlg(rpc_t *rpc,void *c){
 	LM_DBG("Dialog is found with callid  for terminate rpc '%.*s' \n",
 			callid.len, callid.s);
 
-	ret=dlg_bye_all(dlg, NULL);
+	ret=dlg_bye_all(dlg, (rpc_extra_hdrs.len>0)?&rpc_extra_hdrs:NULL);
 
 	LM_DBG("Dialog bye return code %d \n",ret);
 
