@@ -195,7 +195,9 @@ static int db_write_cdr( struct dlg_cell* dialog,
 					VAL_TYPE(db_cdr_vals+i)=DB1_STRING;
 					t = gmtime(&timeval_val.tv_sec);
 					/* Convert time_t structure to format accepted by the database */
-					if (strftime(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE, TIME_STRING_FORMAT, t) <= 0) {
+					//if (strftime(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE, TIME_STRING_FORMAT, t) <= 0) {
+					if (strftime(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE, acc_time_format, t) <= 0) {
+					        LM_ERR("failed to convert time.\n");
 						cdr_time_format_buf[i][0] = '\0';
 					}
 
