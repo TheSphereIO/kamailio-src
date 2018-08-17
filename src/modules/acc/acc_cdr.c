@@ -200,7 +200,7 @@ static int db_write_cdr( struct dlg_cell* dialog,
 					        LM_ERR("failed to convert time.\n");
 						cdr_time_format_buf[i][0] = '\0';
 					}
-
+					LM_ERR("Converted date %s (%s)\n",cdr_time_format_buf[i], strlen(cdr_time_format_buf[i]));
 					VAL_STRING(db_cdr_vals+i) = cdr_time_format_buf[i];
 				} else {
 					VAL_TYPE(db_cdr_vals+i)=DB1_DATETIME;
