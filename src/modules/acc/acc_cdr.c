@@ -51,18 +51,18 @@
 
 /* Solaris does not provide timersub macro in <sys/time.h> */
 #ifdef __OS_solaris
-#define timersub(tvp, uvp, vvp)                     \
-	do {                                \
-		(vvp)->tv_sec = (tvp)->tv_sec - (uvp)->tv_sec;      \
+#define timersub(tvp, uvp, vvp)			    \
+	do {				    \
+		(vvp)->tv_sec = (tvp)->tv_sec - (uvp)->tv_sec;	    \
 		(vvp)->tv_usec = (tvp)->tv_usec - (uvp)->tv_usec;   \
-		if ((vvp)->tv_usec < 0) {               \
-			(vvp)->tv_sec--;                \
-			(vvp)->tv_usec += 1000000;          \
-		}                           \
+		if ((vvp)->tv_usec < 0) {		\
+			(vvp)->tv_sec--;		\
+			(vvp)->tv_usec += 1000000;	    \
+		}			    \
 	} while (0)
 #endif // __OS_solaris
 
-#define TIME_STR_BUFFER_SIZE 20
+#define TIME_STR_BUFFER_SIZE 27
 #define TIME_BUFFER_LENGTH 256
 #define TIME_STRING_FORMAT "%Y-%m-%d %H:%M:%S"
 
@@ -145,6 +145,7 @@ static int db_write_cdr( struct dlg_cell* dialog,
 	char * end;
 	struct tm *t;
 	char cdr_time_format_buf[MAX_CDR_CORE][TIME_STR_BUFFER_SIZE];
+	char tmp_buf[TIME_STR_BUFFER_SIZE];
 
 	if(acc_cdrs_table.len<=0)
 		return 0;
@@ -198,11 +199,31 @@ static int db_write_cdr( struct dlg_cell* dialog,
 					if (strftime(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE, TIME_STRING_FORMAT, t) <= 0) {
 						cdr_time_format_buf[i][0] = '\0';
 					}
-
 					VAL_STRING(db_cdr_vals+i) = cdr_time_format_buf[i];
 				} else {
-					VAL_TYPE(db_cdr_vals+i)=DB1_DATETIME;
-					VAL_TIME(db_cdr_vals+i) = timeval_val.tv_sec;
+					switch (cdr_time_precision) {
+						case 1:
+						case 2:
+							VAL_TYPE(db_cdr_vals+i)=DB1_STRING;
+							t = localtime(&timeval_val.tv_sec);
+							if (strftime(tmp_buf, TIME_STR_BUFFER_SIZE, TIME_STRING_FORMAT, t) <= 0) {
+								cdr_time_format_buf[i][0] = '\0';
+							} else {
+								if (cdr_time_precision == 1) {
+									/* milliseconds */
+									snprintf(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE,	"%s.%3d", tmp_buf, timeval_val.tv_usec/1000);
+								} else {
+									/* microseconds */
+									snprintf(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE,	"%s.%3d", tmp_buf, timeval_val.tv_usec);
+								}
+							}
+							VAL_STRING(db_cdr_vals+i) = cdr_time_format_buf[i];
+							break;
+						default:	
+							VAL_TYPE(db_cdr_vals+i)=DB1_DATETIME;
+							VAL_TIME(db_cdr_vals+i) = timeval_val.tv_sec;
+							break;
+					}
 				}
 				break;
 			case TYPE_DOUBLE:
