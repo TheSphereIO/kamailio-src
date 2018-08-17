@@ -468,6 +468,7 @@ static int mod_init( void )
 
 	acc_log_init();
 
+	LM_ERR("time_format: %s\n", acc_time_format);
 	/* ----------- INIT CDR GENERATION ----------- */
 
 	if( cdr_enable < 0 || cdr_enable > 1)
