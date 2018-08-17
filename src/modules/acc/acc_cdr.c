@@ -198,11 +198,12 @@ static int db_write_cdr( struct dlg_cell* dialog,
 					/* Convert time_t structure to format accepted by the database */
 					//if (strftime(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE, acc_time_format, t) <= 0) {
 					//if (strftime(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE, TIME_STRING_FORMAT, t) <= 0) {
+					LM_ERR("Converting date.\n");
 					if (strftime(tmp_buf, TIME_STR_BUFFER_SIZE, TIME_STRING_FORMAT, t) <= 0) {
-					        //LM_ERR("failed to convert time.\n");
+					        LM_ERR("failed to convert time.\n");
 						cdr_time_format_buf[i][0] = '\0';
 					}
-					LM_ERR("Converted date %s (%s)\n",tmp_buf, strlen(tmp_buf));
+					LM_ERR("Converted date %s (%d)\n",tmp_buf, strlen(tmp_buf));
 					snprintf(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE,  "%s.%03ld", tmp_buf, timeval_val.tv_usec);
 					VAL_STRING(db_cdr_vals+i) = cdr_time_format_buf[i];
 				} else {
