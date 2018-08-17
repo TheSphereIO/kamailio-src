@@ -145,6 +145,7 @@ static int db_write_cdr( struct dlg_cell* dialog,
 	char * end;
 	struct tm *t;
 	char cdr_time_format_buf[MAX_CDR_CORE][TIME_STR_BUFFER_SIZE];
+	char tmp_buf[TIME_STR_BUFFER_SIZE];
 
 	if(acc_cdrs_table.len<=0)
 		return 0;
@@ -195,12 +196,14 @@ static int db_write_cdr( struct dlg_cell* dialog,
 					VAL_TYPE(db_cdr_vals+i)=DB1_STRING;
 					t = gmtime(&timeval_val.tv_sec);
 					/* Convert time_t structure to format accepted by the database */
+					//if (strftime(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE, acc_time_format, t) <= 0) {
 					//if (strftime(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE, TIME_STRING_FORMAT, t) <= 0) {
-					if (strftime(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE, acc_time_format, t) <= 0) {
-					        LM_ERR("failed to convert time.\n");
+					if (strftime(tmp_buf, TIME_STR_BUFFER_SIZE, TIME_STRING_FORMAT, t) <= 0) {
+					        //LM_ERR("failed to convert time.\n");
 						cdr_time_format_buf[i][0] = '\0';
 					}
-					LM_ERR("Converted date %s (%s)\n",cdr_time_format_buf[i], strlen(cdr_time_format_buf[i]));
+					LM_ERR("Converted date %s (%s)\n",tmp_buf, strlen(tmp_buf));
+					snprintf(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE,  "%s.%03ld", tmp_buf, timeval_val.tv_usec);
 					VAL_STRING(db_cdr_vals+i) = cdr_time_format_buf[i];
 				} else {
 					VAL_TYPE(db_cdr_vals+i)=DB1_DATETIME;
