@@ -119,6 +119,7 @@ int cdr_extra_nullable  = 0;
 int cdr_log_enable  = 1;
 int cdr_start_on_confirmed = 0;
 int cdr_expired_dlg_enable = 0;
+int cdr_time_precision  = 0;
 static char* cdr_facility_str = 0;
 static char* cdr_log_extra_str = 0;
 
@@ -201,6 +202,7 @@ static param_export_t params[] = {
 	{"log_extra",            PARAM_STRING, &log_extra_str        },
 	/* cdr specific */
 	{"cdr_enable",           INT_PARAM, &cdr_enable                 },
+	{"cdr_time_precision",     INT_PARAM, &cdr_time_precision        },
 	{"cdr_log_enable",         INT_PARAM, &cdr_log_enable           },
 	{"cdr_start_on_confirmed", INT_PARAM, &cdr_start_on_confirmed   },
 	{"cdr_facility",         PARAM_STRING, &cdr_facility_str           },
@@ -520,6 +522,12 @@ static int mod_init( void )
 			LM_ERR("failed to init cdr generation\n");
 			return -1;
 		}
+	}
+
+	if( cdr_time_precision < 0 || cdr_enable > 2)
+	{
+		LM_ERR("cdr_time_precision is out of range\n");
+		return -1;
 	}
 
 	/* ------------ SQL INIT SECTION ----------- */
