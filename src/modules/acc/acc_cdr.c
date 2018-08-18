@@ -204,7 +204,7 @@ static int db_write_cdr( struct dlg_cell* dialog,
 						cdr_time_format_buf[i][0] = '\0';
 					}
 					LM_ERR("Converted date %s (%d)\n",tmp_buf, strlen(tmp_buf));
-					snprintf(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE,  "%s.%03ld", tmp_buf, timeval_val.tv_usec);
+					snprintf(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE,  "%s.%3d", tmp_buf, timeval_val.tv_usec/1000);
 					LM_ERR("Final date %s (%d)\n",cdr_time_format_buf[i], strlen(cdr_time_format_buf[i]));
 					VAL_STRING(db_cdr_vals+i) = cdr_time_format_buf[i];
 				} else {
