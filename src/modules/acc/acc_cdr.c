@@ -62,7 +62,7 @@
 	} while (0)
 #endif // __OS_solaris
 
-#define TIME_STR_BUFFER_SIZE 20
+#define TIME_STR_BUFFER_SIZE 27
 #define TIME_BUFFER_LENGTH 256
 #define TIME_STRING_FORMAT "%Y-%m-%d %H:%M:%S"
 
@@ -205,6 +205,7 @@ static int db_write_cdr( struct dlg_cell* dialog,
 					}
 					LM_ERR("Converted date %s (%d)\n",tmp_buf, strlen(tmp_buf));
 					snprintf(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE,  "%s.%03ld", tmp_buf, timeval_val.tv_usec);
+					LM_ERR("Final date %s (%d)\n",cdr_time_format_buf[i], strlen(cdr_time_format_buf[i]));
 					VAL_STRING(db_cdr_vals+i) = cdr_time_format_buf[i];
 				} else {
 					VAL_TYPE(db_cdr_vals+i)=DB1_DATETIME;
