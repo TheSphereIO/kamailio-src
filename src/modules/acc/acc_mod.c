@@ -524,7 +524,7 @@ static int mod_init( void )
 		}
 	}
 
-	if( cdr_time_precision < 0 || cdr_enable > 2)
+	if( cdr_time_precision < 0 || cdr_time_precision > 2)
 	{
 		LM_ERR("cdr_time_precision is out of range\n");
 		return -1;
