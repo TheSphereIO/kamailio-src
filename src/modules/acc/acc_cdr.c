@@ -51,14 +51,14 @@
 
 /* Solaris does not provide timersub macro in <sys/time.h> */
 #ifdef __OS_solaris
-#define timersub(tvp, uvp, vvp)			    \
-	do {				    \
-		(vvp)->tv_sec = (tvp)->tv_sec - (uvp)->tv_sec;	    \
+#define timersub(tvp, uvp, vvp)                     \
+	do {                                \
+		(vvp)->tv_sec = (tvp)->tv_sec - (uvp)->tv_sec;      \
 		(vvp)->tv_usec = (tvp)->tv_usec - (uvp)->tv_usec;   \
-		if ((vvp)->tv_usec < 0) {		\
-			(vvp)->tv_sec--;		\
-			(vvp)->tv_usec += 1000000;	    \
-		}			    \
+		if ((vvp)->tv_usec < 0) {               \
+			(vvp)->tv_sec--;                \
+			(vvp)->tv_usec += 1000000;          \
+		}                           \
 	} while (0)
 #endif // __OS_solaris
 
