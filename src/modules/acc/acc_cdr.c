@@ -211,10 +211,10 @@ static int db_write_cdr( struct dlg_cell* dialog,
 							} else {
 								if (cdr_time_precision == 1) {
 									/* milliseconds */
-									snprintf(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE,	"%s.%3d", tmp_buf, timeval_val.tv_usec/1000);
+									snprintf(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE,	"%s.%03d", tmp_buf, timeval_val.tv_usec/1000);
 								} else {
 									/* microseconds */
-									snprintf(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE,	"%s.%3d", tmp_buf, timeval_val.tv_usec);
+									snprintf(cdr_time_format_buf[i], TIME_STR_BUFFER_SIZE,	"%s.%06d", tmp_buf, timeval_val.tv_usec);
 								}
 							}
 							VAL_STRING(db_cdr_vals+i) = cdr_time_format_buf[i];
